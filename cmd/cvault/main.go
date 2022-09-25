@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/spf13/cobra"
 )
 
@@ -22,9 +23,12 @@ func main() {
 	rootCmd.PersistentFlags().StringP("store", "s", "local://.", "Location of storage")
 
 	cfg, _ := config.LoadDefaultConfig(context.TODO())
-	client := kms.NewFromConfig(cfg)
-	AddEncryptCommand(client, rootCmd)
-	AddDecryptCommand(client, rootCmd)
+	kmsClient := kms.NewFromConfig(cfg)
+	s3Client := s3.NewFromConfig(cfg)
+	AddEncryptCommand(kmsClient, s3Client, rootCmd)
+	AddDecryptCommand(kmsClient, s3Client, rootCmd)
+	AddListCommand(s3Client, rootCmd)
+	AddRemoveCommand(s3Client, rootCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

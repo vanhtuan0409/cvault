@@ -2,36 +2,64 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/spf13/cobra"
 	"github.com/vanhtuan0409/cvault"
+	"github.com/vanhtuan0409/cvault/storage"
 )
 
-func AddEncryptCommand(client *kms.Client, root *cobra.Command) {
+func AddEncryptCommand(kmsClient *kms.Client, s3Client *s3.Client, root *cobra.Command) {
 	encryptCmd := &cobra.Command{
 		Use:   "encrypt",
 		Short: "Encrypt a file and push it into storage",
-		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			keyId := cmd.Flag("key-id").Value.String()
 			if keyId == "" {
 				return errors.New("invalid key id")
 			}
-			inputPath := args[0]
+			storeUrl := cmd.Flag("store").Value.String()
+			if storeUrl == "" {
+				return errors.New("invalid store url")
+			}
 
-			input, err := ioutil.ReadFile(inputPath)
+			ctx := cmd.Context()
+			s, err := storage.GetStorage(storeUrl, s3Client)
 			if err != nil {
 				return err
 			}
 
-			encrypted, err := cvault.Encrypt(cmd.Context(), client, keyId, input)
-			if err != nil {
-				return err
+			fmt.Printf("Using KMS key: %s\n", keyId)
+			fmt.Printf("Using storage: %s\n", storeUrl)
+			fmt.Println("--------------------------------")
+
+			for _, inputPath := range args {
+				fmt.Printf("Source file: %s\n", inputPath)
+
+				err := func() error {
+					input, err := ioutil.ReadFile(inputPath)
+					if err != nil {
+						return err
+					}
+
+					encrypted, err := cvault.Encrypt(ctx, kmsClient, keyId, input)
+					if err != nil {
+						return err
+					}
+
+					fileKey := cvault.ToEncryptedName(filepath.Base(inputPath))
+					return s.Put(ctx, fileKey, encrypted)
+				}()
+				if err != nil {
+					fmt.Printf("[Warning] Unable to encrypt file %s. ERR: %v\n", inputPath, err)
+				}
 			}
 
-			return ioutil.WriteFile("encrypted", encrypted, 0644)
+			return nil
 		},
 	}
 
