@@ -1,0 +1,27 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - id: cvault
+    dir: ./cmd/cvault
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+archives:
+  - id: cvault
+    builds:
+      - cvault
+    format: tar.gz
+    files:
+      - none*
+changelog:
+  skip: true
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: "dev-snapshot"

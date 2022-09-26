@@ -1,0 +1,52 @@
+name: snapshot
+
+concurrency:
+  group: snapshot
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Fetch all tags
+        run: git fetch --force --tags
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.19
+
+      - name: Remove old tag
+        run: |
+          gh release delete snapshot --yes || true
+          git tag --delete snapshot || true
+          git push --delete origin snapshot || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build artifact
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --rm-dist --snapshot --skip-publish=false
+
+      - name: Publish
+        run: |
+          git push origin :snapshot || true
+          gh release create snapshot --prerelease --title "Snapshot" --target $GITHUB_SHA dist/*.tar.gz dist/checksums.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

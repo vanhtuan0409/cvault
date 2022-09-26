@@ -1,4 +1,7 @@
 .PHONY: *.go go.mod go.sum
 
 build:
-	CGO_ENABLED=0 go build -o bin/cvault ./cmd/cvault
+	goreleaser build --snapshot --rm-dist
+
+release:
+	goreleaser release --snapshot --rm-dist
