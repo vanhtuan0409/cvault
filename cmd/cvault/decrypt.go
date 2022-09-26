@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/vanhtuan0409/cvault"
 	"github.com/vanhtuan0409/cvault/storage"
 )
@@ -18,13 +19,12 @@ func AddDecryptCommand(kmsClient *kms.Client, s3Client *s3.Client, root *cobra.C
 	decryptCmd := &cobra.Command{
 		Use:   "decrypt",
 		Short: "Decrypt a file from storage",
-		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			keyId := cmd.Flag("key-id").Value.String()
+			keyId := viper.GetString("keyId")
 			if keyId == "" {
 				return errors.New("invalid key id")
 			}
-			storeUrl := cmd.Flag("store").Value.String()
+			storeUrl := viper.GetString("store")
 			if storeUrl == "" {
 				return errors.New("invalid store url")
 			}

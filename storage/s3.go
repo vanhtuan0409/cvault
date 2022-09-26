@@ -17,7 +17,7 @@ type s3Storage struct {
 }
 
 func NewS3Storage(storeUrl string, client *s3.Client) *s3Storage {
-	bucket := strings.TrimPrefix("s3://", storeUrl)
+	bucket := strings.TrimPrefix(storeUrl, "s3://")
 	return &s3Storage{
 		bucket: bucket,
 		client: client,

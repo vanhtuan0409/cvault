@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/vanhtuan0409/cvault/storage"
 )
 
@@ -16,7 +17,7 @@ func AddListCommand(client *s3.Client, root *cobra.Command) {
 		Use:   "list",
 		Short: "List encrypted file in store",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			storeUrl := cmd.Flag("store").Value.String()
+			storeUrl := viper.GetString("store")
 			if storeUrl == "" {
 				return errors.New("invalid store url")
 			}
