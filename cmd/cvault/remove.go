@@ -12,8 +12,9 @@ import (
 
 func AddRemoveCommand(client *s3.Client, root *cobra.Command) {
 	removeCmd := &cobra.Command{
-		Use:   "remove",
-		Short: "Remove encrypted file from store",
+		Use:               "remove",
+		Short:             "Remove encrypted file from store",
+		ValidArgsFunction: completeStoreFile(client),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			storeUrl := viper.GetString("store")
 			if storeUrl == "" {
