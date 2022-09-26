@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -19,6 +20,26 @@ func AddDecryptCommand(kmsClient *kms.Client, s3Client *s3.Client, root *cobra.C
 	decryptCmd := &cobra.Command{
 		Use:   "decrypt",
 		Short: "Decrypt a file from storage",
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			storeUrl := viper.GetString("store")
+			if storeUrl == "" {
+				return []string{}, cobra.ShellCompDirectiveDefault
+			}
+			s, err := storage.GetStorage(storeUrl, s3Client)
+			if err != nil {
+				return []string{}, cobra.ShellCompDirectiveDefault
+			}
+
+			files, err := s.List(cmd.Context())
+			if err != nil {
+				return []string{}, cobra.ShellCompDirectiveNoFileComp
+			}
+
+			matches := cvault.SliceFilter(files, func(f string) bool {
+				return strings.HasPrefix(f, toComplete)
+			})
+			return matches, cobra.ShellCompDirectiveNoFileComp
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			keyId := viper.GetString("keyId")
 			if keyId == "" {
