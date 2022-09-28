@@ -4,12 +4,18 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
+type VaultItem struct {
+	Key          string
+	LastModified time.Time
+}
+
 type Storage interface {
-	List(context.Context) ([]string, error)
+	List(context.Context) ([]*VaultItem, error)
 	Get(context.Context, string) ([]byte, error)
 	Put(context.Context, string, []byte) error
 	Remove(context.Context, string) error

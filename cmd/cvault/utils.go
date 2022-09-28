@@ -26,9 +26,12 @@ func completeStoreFile(s3Client *s3.Client) func(cmd *cobra.Command, args []stri
 			return []string{}, cobra.ShellCompDirectiveNoFileComp
 		}
 
-		matches := cvault.SliceFilter(files, func(f string) bool {
-			return strings.HasPrefix(f, toComplete)
+		matches := cvault.SliceFilter(files, func(item *storage.VaultItem) bool {
+			return strings.HasPrefix(item.Key, toComplete)
 		})
-		return matches, cobra.ShellCompDirectiveNoFileComp
+		items := cvault.SliceMap(matches, func(item *storage.VaultItem) string {
+			return item.Key
+		})
+		return items, cobra.ShellCompDirectiveNoFileComp
 	}
 }

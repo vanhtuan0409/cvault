@@ -19,18 +19,22 @@ func NewLocalStorage(storeUrl string) *localStorage {
 	return &localStorage{root: root}
 }
 
-func (s *localStorage) List(ctx context.Context) ([]string, error) {
+func (s *localStorage) List(ctx context.Context) ([]*VaultItem, error) {
+	ret := []*VaultItem{}
 	entries, err := os.ReadDir(s.root)
 	if err != nil {
-		return []string{}, err
+		return ret, err
 	}
-	ret := []string{}
 	for _, e := range entries {
 		if e.IsDir() {
 			continue
 		}
 		if name := e.Name(); cvault.IsEncryptedName(name) {
-			ret = append(ret, name)
+			fInfo, _ := e.Info()
+			ret = append(ret, &VaultItem{
+				Key:          name,
+				LastModified: fInfo.ModTime(),
+			})
 		}
 	}
 	return ret, nil

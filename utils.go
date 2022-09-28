@@ -28,3 +28,11 @@ func SliceFilter[T any](arr []T, fn func(T) bool) []T {
 	}
 	return ret
 }
+
+func SliceMap[T any, V any](arr []T, fn func(T) V) []V {
+	ret := make([]V, len(arr))
+	for i, it := range arr {
+		ret[i] = fn(it)
+	}
+	return ret
+}

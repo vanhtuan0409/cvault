@@ -3,6 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
+	"text/tabwriter"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/spf13/cobra"
@@ -30,8 +33,12 @@ func AddListCommand(client *s3.Client, root *cobra.Command) {
 			if err != nil {
 				return err
 			}
-			for _, fName := range files {
-				fmt.Println(fName)
+
+			w := tabwriter.NewWriter(os.Stdout, 3, 4, 1, '\t', tabwriter.AlignRight)
+			defer w.Flush()
+			for _, entry := range files {
+				timeStr := entry.LastModified.In(time.Local).Format(time.RFC3339)
+				fmt.Fprintf(w, "%s\t%s\n", timeStr, entry.Key)
 			}
 			return nil
 		},

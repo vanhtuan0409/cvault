@@ -24,21 +24,24 @@ func NewS3Storage(storeUrl string, client *s3.Client) *s3Storage {
 	}
 }
 
-func (s *s3Storage) List(ctx context.Context) ([]string, error) {
+func (s *s3Storage) List(ctx context.Context) ([]*VaultItem, error) {
 	paginator := s3.NewListObjectsV2Paginator(s.client, &s3.ListObjectsV2Input{
 		Bucket: aws.String(s.bucket),
 	})
 
-	ret := []string{}
+	ret := []*VaultItem{}
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			return []string{}, err
+			return ret, err
 		}
 
 		for _, obj := range page.Contents {
 			if key := *obj.Key; cvault.IsEncryptedName(key) {
-				ret = append(ret, key)
+				ret = append(ret, &VaultItem{
+					Key:          key,
+					LastModified: *obj.LastModified,
+				})
 			}
 		}
 	}
