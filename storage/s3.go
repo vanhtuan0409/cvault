@@ -108,5 +108,23 @@ func parseS3StorageUrl(storeUrl string) (string, *s3.Client, error) {
 	if err != nil {
 		return "", nil, err
 	}
-	return bucket, s3.NewFromConfig(cfg), nil
+
+	clientOpts := []func(*s3.Options){}
+	if endpoint := s3Url.Query().Get("endpoint"); endpoint != "" {
+		clientOpts = append(clientOpts, s3.WithEndpointResolver(customResolverFunc(endpoint)))
+	}
+	client := s3.NewFromConfig(cfg, clientOpts...)
+
+	return bucket, client, nil
+}
+
+func customResolverFunc(endpoint string) s3.EndpointResolverFunc {
+	return func(region string, options s3.EndpointResolverOptions) (aws.Endpoint, error) {
+		return aws.Endpoint{
+			PartitionID:       "aws",
+			URL:               endpoint,
+			SigningRegion:     "",
+			HostnameImmutable: true,
+		}, nil
+	}
 }
