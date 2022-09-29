@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -30,12 +29,11 @@ func main() {
 
 	cfg, _ := config.LoadDefaultConfig(context.TODO())
 	kmsClient := kms.NewFromConfig(cfg)
-	s3Client := s3.NewFromConfig(cfg)
-	AddEncryptCommand(kmsClient, s3Client, rootCmd)
-	AddDecryptCommand(kmsClient, s3Client, rootCmd)
-	AddListCommand(s3Client, rootCmd)
-	AddRemoveCommand(s3Client, rootCmd)
-	AddPeekCommand(kmsClient, s3Client, rootCmd)
+	AddEncryptCommand(kmsClient, rootCmd)
+	AddDecryptCommand(kmsClient, rootCmd)
+	AddListCommand(rootCmd)
+	AddRemoveCommand(rootCmd)
+	AddPeekCommand(kmsClient, rootCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

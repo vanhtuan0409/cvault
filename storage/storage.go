@@ -5,8 +5,6 @@ import (
 	"errors"
 	"strings"
 	"time"
-
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type VaultItem struct {
@@ -21,12 +19,16 @@ type Storage interface {
 	Remove(context.Context, string) error
 }
 
-func GetStorage(storeUrl string, s3Client *s3.Client) (Storage, error) {
+func GetStorage(storeUrl string) (Storage, error) {
 	switch {
 	case strings.HasPrefix(storeUrl, "local://"):
 		return NewLocalStorage(storeUrl), nil
 	case strings.HasPrefix(storeUrl, "s3://"):
-		return NewS3Storage(storeUrl, s3Client), nil
+		bucket, client, err := parseS3StorageUrl(storeUrl)
+		if err != nil {
+			return nil, err
+		}
+		return NewS3Storage(bucket, client), nil
 	default:
 		return nil, errors.New("invalid storage source")
 	}

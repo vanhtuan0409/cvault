@@ -7,14 +7,13 @@ import (
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/vanhtuan0409/cvault"
 	"github.com/vanhtuan0409/cvault/storage"
 )
 
-func AddEncryptCommand(kmsClient *kms.Client, s3Client *s3.Client, root *cobra.Command) {
+func AddEncryptCommand(kmsClient *kms.Client, root *cobra.Command) {
 	encryptCmd := &cobra.Command{
 		Use:   "encrypt",
 		Short: "Encrypt a file and push it into storage",
@@ -29,7 +28,7 @@ func AddEncryptCommand(kmsClient *kms.Client, s3Client *s3.Client, root *cobra.C
 			}
 
 			ctx := cmd.Context()
-			s, err := storage.GetStorage(storeUrl, s3Client)
+			s, err := storage.GetStorage(storeUrl)
 			if err != nil {
 				return err
 			}

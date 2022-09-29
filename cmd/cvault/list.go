@@ -7,13 +7,12 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/vanhtuan0409/cvault/storage"
 )
 
-func AddListCommand(client *s3.Client, root *cobra.Command) {
+func AddListCommand(root *cobra.Command) {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List encrypted file in store",
@@ -24,7 +23,7 @@ func AddListCommand(client *s3.Client, root *cobra.Command) {
 			}
 			ctx := cmd.Context()
 
-			s, err := storage.GetStorage(storeUrl, client)
+			s, err := storage.GetStorage(storeUrl)
 			if err != nil {
 				return err
 			}

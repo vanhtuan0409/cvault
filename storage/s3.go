@@ -3,9 +3,12 @@ package storage
 import (
 	"bytes"
 	"context"
-	"strings"
+	"errors"
+	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/vanhtuan0409/cvault"
@@ -16,8 +19,7 @@ type s3Storage struct {
 	client *s3.Client
 }
 
-func NewS3Storage(storeUrl string, client *s3.Client) *s3Storage {
-	bucket := strings.TrimPrefix(storeUrl, "s3://")
+func NewS3Storage(bucket string, client *s3.Client) *s3Storage {
 	return &s3Storage{
 		bucket: bucket,
 		client: client,
@@ -77,4 +79,34 @@ func (s *s3Storage) Remove(ctx context.Context, key string) error {
 		Key:    aws.String(key),
 	})
 	return err
+}
+
+func parseS3StorageUrl(storeUrl string) (string, *s3.Client, error) {
+	s3Url, err := url.Parse(storeUrl)
+	if err != nil {
+		return "", nil, err
+	}
+	if s3Url.Scheme != "s3" {
+		return "", nil, errors.New("invalid schema")
+	}
+
+	ctx := context.TODO()
+	bucket := s3Url.Hostname()
+	opts := []func(*config.LoadOptions) error{}
+	if user := s3Url.User; user != nil {
+		accessKey := user.Username()
+		secretKey, _ := user.Password()
+		opts = append(opts, config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(accessKey, secretKey, ""),
+		))
+	}
+	if region := s3Url.Query().Get("region"); region != "" {
+		opts = append(opts, config.WithRegion(region))
+	}
+
+	cfg, err := config.LoadDefaultConfig(ctx, opts...)
+	if err != nil {
+		return "", nil, err
+	}
+	return bucket, s3.NewFromConfig(cfg), nil
 }

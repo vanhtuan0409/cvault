@@ -4,17 +4,16 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/vanhtuan0409/cvault/storage"
 )
 
-func AddRemoveCommand(client *s3.Client, root *cobra.Command) {
+func AddRemoveCommand(root *cobra.Command) {
 	removeCmd := &cobra.Command{
 		Use:               "remove",
 		Short:             "Remove encrypted file from store",
-		ValidArgsFunction: completeStoreFile(client),
+		ValidArgsFunction: completeStoreFile(),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			storeUrl := viper.GetString("store")
 			if storeUrl == "" {
@@ -22,7 +21,7 @@ func AddRemoveCommand(client *s3.Client, root *cobra.Command) {
 			}
 			ctx := cmd.Context()
 
-			s, err := storage.GetStorage(storeUrl, client)
+			s, err := storage.GetStorage(storeUrl)
 			if err != nil {
 				return err
 			}
