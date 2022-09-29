@@ -35,6 +35,7 @@ func main() {
 	AddDecryptCommand(kmsClient, s3Client, rootCmd)
 	AddListCommand(s3Client, rootCmd)
 	AddRemoveCommand(s3Client, rootCmd)
+	AddPeekCommand(kmsClient, s3Client, rootCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
