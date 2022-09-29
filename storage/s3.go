@@ -123,7 +123,7 @@ func customResolverFunc(endpoint string) s3.EndpointResolverFunc {
 		return aws.Endpoint{
 			PartitionID:       "aws",
 			URL:               endpoint,
-			SigningRegion:     "",
+			SigningRegion:     region,
 			HostnameImmutable: true,
 		}, nil
 	}
