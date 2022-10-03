@@ -5,7 +5,13 @@ import (
 	"strings"
 )
 
-const FileType = ".cvault"
+const (
+	FileType = ".cvault"
+
+	TinkAwsKms  = "aws-kms://"
+	TinkGcpKms  = "gcp-kms://"
+	TinkHcVault = "hcvault://"
+)
 
 func ToEncryptedName(name string) string {
 	return fmt.Sprintf("%s%s", name, FileType)

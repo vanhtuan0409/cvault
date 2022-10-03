@@ -1,33 +1,26 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
-	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/vanhtuan0409/cvault"
 	"github.com/vanhtuan0409/cvault/storage"
 )
 
-func AddDecryptCommand(kmsClient *kms.Client, root *cobra.Command) {
+func AddDecryptCommand(root *cobra.Command) {
 	decryptCmd := &cobra.Command{
 		Use:               "decrypt",
 		Short:             "Decrypt a file from storage",
 		ValidArgsFunction: completeStoreFile(),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			keyId := viper.GetString("keyId")
-			if keyId == "" {
-				return errors.New("invalid key id")
-			}
 			storeUrl := viper.GetString("store")
-			if storeUrl == "" {
-				return errors.New("invalid store url")
-			}
+
 			outputDir := cmd.Flag("output-dir").Value.String()
 			if _, err := os.Stat(outputDir); os.IsNotExist(err) {
 				if err := os.MkdirAll(outputDir, 0644); err != nil {
@@ -41,7 +34,7 @@ func AddDecryptCommand(kmsClient *kms.Client, root *cobra.Command) {
 				return err
 			}
 
-			fmt.Printf("Using KMS key: %s\n", keyId)
+			fmt.Printf("Using key: %s\n", keyId)
 			fmt.Printf("Using storage: %s\n", storeUrl)
 			fmt.Printf("Output dir: %s\n", outputDir)
 			fmt.Println("--------------------------------")
@@ -59,7 +52,7 @@ func AddDecryptCommand(kmsClient *kms.Client, root *cobra.Command) {
 						return err
 					}
 
-					decrypted, err := cvault.Decrypt(ctx, kmsClient, keyId, encrypted)
+					decrypted, err := cvault.Decrypt(ctx, keyId, encrypted)
 					if err != nil {
 						return err
 					}
