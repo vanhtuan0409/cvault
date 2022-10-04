@@ -47,7 +47,7 @@ func main() {
 	rootCmd.PersistentFlags().StringP("key-id", "k", "", "KMS key id")
 	rootCmd.PersistentFlags().StringP("store", "s", "local://.", "Location of storage")
 	rootCmd.PersistentFlags().String("vault-token", "", "HC vault token")
-	rootCmd.PersistentFlags().String("pass-prompt", "", "Path to AES passphrase retrieve script. If leave empty, using console prompt. Only when use key aesgcm://")
+	rootCmd.PersistentFlags().String("pass-prompt", "", "Prompt for AES passphrase. Only when use key aesgcm://")
 
 	viper.BindPFlag("vaultToken", rootCmd.PersistentFlags().Lookup("vault-token"))
 	viper.BindPFlag("keyId", rootCmd.PersistentFlags().Lookup("key-id"))
