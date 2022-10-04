@@ -11,6 +11,7 @@ const (
 	TinkAwsKms  = "aws-kms://"
 	TinkGcpKms  = "gcp-kms://"
 	TinkHcVault = "hcvault://"
+	AesGcm      = "aesgcm://"
 )
 
 func ToEncryptedName(name string) string {

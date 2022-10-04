@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/vanhtuan0409/cvault"
+	"github.com/vanhtuan0409/cvault/aead/aesgcm"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 				return errors.New("invalid store url")
 			}
 
-			if err := registerTinkKey(keyId, cmd); err != nil {
+			if err := registerTinkKey(keyId); err != nil {
 				return err
 			}
 
@@ -46,9 +47,12 @@ func main() {
 	rootCmd.PersistentFlags().StringP("key-id", "k", "", "KMS key id")
 	rootCmd.PersistentFlags().StringP("store", "s", "local://.", "Location of storage")
 	rootCmd.PersistentFlags().String("vault-token", "", "HC vault token")
+	rootCmd.PersistentFlags().String("pass-prompt", "", "AES passphrase when using aesgcm:// key")
 
+	viper.BindPFlag("vaultToken", rootCmd.PersistentFlags().Lookup("vault-token"))
 	viper.BindPFlag("keyId", rootCmd.PersistentFlags().Lookup("key-id"))
 	viper.BindPFlag("store", rootCmd.PersistentFlags().Lookup("store"))
+	viper.BindPFlag("passPrompt", rootCmd.PersistentFlags().Lookup("pass-prompt"))
 
 	AddEncryptCommand(rootCmd)
 	AddDecryptCommand(rootCmd)
@@ -74,7 +78,7 @@ func initConfig() {
 	viper.ReadInConfig()
 }
 
-func registerTinkKey(keyId string, cmd *cobra.Command) (err error) {
+func registerTinkKey(keyId string) (err error) {
 	var client registry.KMSClient
 
 	switch {
@@ -83,8 +87,11 @@ func registerTinkKey(keyId string, cmd *cobra.Command) (err error) {
 	case strings.HasPrefix(keyId, cvault.TinkGcpKms):
 		client, err = gcpkms.NewClient(keyId)
 	case strings.HasPrefix(keyId, cvault.TinkHcVault):
-		token := cmd.Flag("vault-token").Value.String()
+		token := viper.GetString("vaultToken")
 		client, err = hcvault.NewClient(keyId, nil, token)
+	case strings.HasPrefix(keyId, cvault.AesGcm):
+		promptScript := viper.GetString("passPrompt")
+		client, err = aesgcm.NewClient(keyId, promptScript)
 	default:
 		return
 	}
