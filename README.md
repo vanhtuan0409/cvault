@@ -12,7 +12,7 @@ Supported KMS:
 - AWS KMS: aws-kms://
 - GCP KMS: gcp-kms://
 - Hashicorp vault: hcvault://
-- Passphrase AES: aesgcm://
+- Passphrase AES: aesgcm:// (not recommended)
 
 Encryption is performed in memory so original file is expected to not be very large
 
@@ -35,7 +35,7 @@ Available Commands:
 Flags:
   -h, --help                 help for cvault
   -k, --key-id string        KMS key id
-      --pass-prompt string   AES passphrase when using aesgcm:// key
+      --pass-prompt string   Prompt for AES passphrase. Only when use key aesgcm://
   -s, --store string         Location of storage (default "local://.")
       --vault-token string   HC vault token
 
