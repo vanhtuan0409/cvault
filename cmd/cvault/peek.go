@@ -15,9 +15,11 @@ func AddPeekCommand(root *cobra.Command) {
 		Use:               "peek",
 		Short:             "Peek an encrypted file to stdout",
 		ValidArgsFunction: completeStoreFile(),
+		Args:              cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			keyId := viper.GetString("keyId")
 			storeUrl := viper.GetString("store")
+			fileKey := args[0]
 
 			ctx := cmd.Context()
 			s, err := storage.GetStorage(storeUrl)
@@ -27,30 +29,20 @@ func AddPeekCommand(root *cobra.Command) {
 
 			fmt.Fprintf(os.Stderr, "Using key: %s\n", keyId)
 			fmt.Fprintf(os.Stderr, "Using storage: %s\n", storeUrl)
+			fmt.Fprintf(os.Stderr, "Source file: %s\n", fileKey)
 			fmt.Fprintln(os.Stderr, "--------------------------------")
 
-			for _, fileKey := range args {
-				fmt.Fprintf(os.Stderr, "# Source file: %s\n", fileKey)
-
-				err := func() error {
-					encrypted, err := s.Get(ctx, fileKey)
-					if err != nil {
-						return err
-					}
-
-					decrypted, err := cvault.Decrypt(ctx, keyId, encrypted)
-					if err != nil {
-						return err
-					}
-
-					os.Stdout.Write(decrypted)
-					return nil
-				}()
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "[Warning] Unable to decrypt file %s. ERR: %v\n", fileKey, err)
-				}
+			encrypted, err := s.Get(ctx, fileKey)
+			if err != nil {
+				return err
 			}
 
+			decrypted, err := cvault.Decrypt(ctx, keyId, encrypted)
+			if err != nil {
+				return err
+			}
+
+			os.Stdout.Write(decrypted)
 			return nil
 		},
 	}
