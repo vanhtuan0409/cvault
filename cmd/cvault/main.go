@@ -60,6 +60,7 @@ func main() {
 	AddListCommand(rootCmd)
 	AddRemoveCommand(rootCmd)
 	AddPeekCommand(rootCmd)
+	AddEditCommand(rootCmd)
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

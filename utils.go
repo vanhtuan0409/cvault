@@ -2,6 +2,7 @@ package cvault
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -42,4 +43,14 @@ func SliceMap[T any, V any](arr []T, fn func(T) V) []V {
 		ret[i] = fn(it)
 	}
 	return ret
+}
+
+func LookupEditor() string {
+	if editor, ok := os.LookupEnv("EDITOR"); ok {
+		return editor
+	}
+	if visual, ok := os.LookupEnv("VISUAL"); ok {
+		return visual
+	}
+	return ""
 }
