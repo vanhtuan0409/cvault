@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -91,7 +90,7 @@ func registerTinkKey(keyId string) (err error) {
 	case strings.HasPrefix(keyId, cvault.TinkHcVault):
 		token := viper.GetString("vaultToken")
 		if token == "" {
-			token = inferVaultToken()
+			token = cvault.InferVaultToken()
 		}
 		client, err = hcvault.NewClient(keyId, nil, token)
 	case strings.HasPrefix(keyId, cvault.AesGcm):
@@ -106,20 +105,4 @@ func registerTinkKey(keyId string) (err error) {
 
 	registry.RegisterKMSClient(client)
 	return nil
-}
-
-func inferVaultToken() string {
-	if envToken := os.Getenv("VAULT_TOKEN"); envToken != "" {
-		return envToken
-	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	tokenPath := filepath.Join(home, ".vault-token")
-	fileToken, err := ioutil.ReadFile(tokenPath)
-	if err != nil {
-		return ""
-	}
-	return string(fileToken)
 }
