@@ -103,6 +103,9 @@ func parseS3StorageUrl(storeUrl string) (string, *s3.Client, error) {
 	if region := s3Url.Query().Get("region"); region != "" {
 		opts = append(opts, config.WithRegion(region))
 	}
+	if profile := s3Url.Query().Get("profile"); profile != "" {
+		opts = append(opts, config.WithSharedConfigProfile(profile))
+	}
 
 	cfg, err := config.LoadDefaultConfig(ctx, opts...)
 	if err != nil {
