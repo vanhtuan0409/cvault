@@ -1,6 +1,9 @@
 package cvault
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -73,4 +76,23 @@ func inferFromHelper() string {
 		return ""
 	}
 	return strings.TrimSpace(string(out))
+}
+
+func InferVaultTlsConfig() (config *tls.Config) {
+	config = &tls.Config{}
+	caPath := os.Getenv("VAULT_CAPATH")
+	if caPath == "" {
+		return
+	}
+	pool, err := x509.SystemCertPool()
+	if err != nil {
+		return
+	}
+	certPem, err := ioutil.ReadFile(caPath)
+	if err != nil {
+		return
+	}
+	pool.AppendCertsFromPEM(certPem)
+	config.RootCAs = pool
+	return
 }

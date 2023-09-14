@@ -86,13 +86,14 @@ func registerTinkKey(keyId string) (err error) {
 	case strings.HasPrefix(keyId, cvault.TinkAwsKms):
 		client, err = awskms.NewClient(keyId)
 	case strings.HasPrefix(keyId, cvault.TinkGcpKms):
-		client, err = gcpkms.NewClient(keyId)
+		client, err = gcpkms.NewClientWithConfig(keyId, nil)
 	case strings.HasPrefix(keyId, cvault.TinkHcVault):
 		token := viper.GetString("vaultToken")
 		if token == "" {
 			token = cvault.InferVaultToken()
 		}
-		client, err = hcvault.NewClient(keyId, nil, token)
+		tlsConfig := cvault.InferVaultTlsConfig()
+		client, err = hcvault.NewClient(keyId, tlsConfig, token)
 	case strings.HasPrefix(keyId, cvault.AesGcm):
 		promptScript := viper.GetString("passPrompt")
 		client, err = aesgcm.NewClient(keyId, promptScript)
