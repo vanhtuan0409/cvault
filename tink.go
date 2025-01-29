@@ -6,7 +6,8 @@ import (
 	"io"
 
 	"github.com/tink-crypto/tink-go/v2/aead"
-	"github.com/tink-crypto/tink-go/v2/keyset"
+	"github.com/tink-crypto/tink-go/v2/core/registry"
+	"github.com/tink-crypto/tink-go/v2/tink"
 	"github.com/vmihailenco/msgpack/v5"
 )
 
@@ -20,14 +21,20 @@ type payload struct {
 	Message []byte
 }
 
-func encryptWithTink(ctx context.Context, keyUrl string, data []byte) ([]byte, error) {
-	dek := aead.AES128CTRHMACSHA256KeyTemplate()
-	kh, err := keyset.NewHandle(aead.KMSEnvelopeAEADKeyTemplate(keyUrl, dek))
+func getPrimitive(ctx context.Context, keyUrl string) (tink.AEAD, error) {
+	client, err := registry.GetKMSClient(keyUrl)
 	if err != nil {
 		return nil, err
 	}
+	kekAEAD, err := client.GetAEAD(keyUrl)
+	if err != nil {
+		return nil, err
+	}
+	return aead.NewKMSEnvelopeAEAD2(aead.AES128CTRHMACSHA256KeyTemplate(), kekAEAD), nil
+}
 
-	a, err := aead.New(kh)
+func encryptWithTink(ctx context.Context, keyUrl string, data []byte) ([]byte, error) {
+	primitive, err := getPrimitive(ctx, keyUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +44,7 @@ func encryptWithTink(ctx context.Context, keyUrl string, data []byte) ([]byte, e
 		return nil, err
 	}
 
-	encrypted, err := a.Encrypt(data, nonce)
+	encrypted, err := primitive.Encrypt(data, nonce)
 	if err != nil {
 		return nil, err
 	}
@@ -54,16 +61,10 @@ func decryptWithTink(ctx context.Context, keyUrl string, data []byte) ([]byte, e
 		return nil, err
 	}
 
-	dek := aead.AES128CTRHMACSHA256KeyTemplate()
-	kh, err := keyset.NewHandle(aead.KMSEnvelopeAEADKeyTemplate(keyUrl, dek))
+	primitive, err := getPrimitive(ctx, keyUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	a, err := aead.New(kh)
-	if err != nil {
-		return nil, err
-	}
-
-	return a.Decrypt(p.Message, p.Nonce[:])
+	return primitive.Decrypt(p.Message, p.Nonce[:])
 }

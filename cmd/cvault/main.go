@@ -42,13 +42,9 @@ func main() {
 
 	rootCmd.PersistentFlags().StringP("key-id", "k", "", "KMS key id")
 	rootCmd.PersistentFlags().StringP("store", "s", "local://.", "Location of storage")
-	rootCmd.PersistentFlags().String("vault-token", "", "HC vault token")
-	rootCmd.PersistentFlags().String("pass-prompt", "", "Prompt for AES passphrase. Only when use key aesgcm://")
 
-	viper.BindPFlag("vaultToken", rootCmd.PersistentFlags().Lookup("vault-token"))
 	viper.BindPFlag("keyId", rootCmd.PersistentFlags().Lookup("key-id"))
 	viper.BindPFlag("store", rootCmd.PersistentFlags().Lookup("store"))
-	viper.BindPFlag("passPrompt", rootCmd.PersistentFlags().Lookup("pass-prompt"))
 
 	AddEncryptCommand(rootCmd)
 	AddDecryptCommand(rootCmd)
@@ -80,8 +76,7 @@ func registerTinkKey(keyId string) (err error) {
 
 	switch {
 	case strings.HasPrefix(keyId, cvault.TinkHcVault):
-		token := viper.GetString("vaultToken")
-		client, err = cvault.VaultClient(keyId, token)
+		client, err = cvault.VaultClient(keyId)
 	default:
 		return errors.New("unsupported key format")
 	}
