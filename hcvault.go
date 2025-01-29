@@ -1,15 +1,17 @@
 package cvault
 
 import (
-	"crypto/tls"
-	"crypto/x509"
-	"io/ioutil"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/hclsimple"
+	"github.com/hashicorp/vault/api"
+	"github.com/tink-crypto/tink-go-hcvault/v2/integration/hcvault"
+	"github.com/tink-crypto/tink-go/v2/core/registry"
 )
 
 type inferFn = func() string
@@ -78,21 +80,29 @@ func inferFromHelper() string {
 	return strings.TrimSpace(string(out))
 }
 
-func InferVaultTlsConfig() (config *tls.Config) {
-	config = &tls.Config{}
-	caPath := os.Getenv("VAULT_CAPATH")
-	if caPath == "" {
-		return
-	}
-	pool, err := x509.SystemCertPool()
+func VaultClient(keyId string, token string) (registry.KMSClient, error) {
+	cfg := api.DefaultConfig()
+	vurl, err := url.Parse(keyId)
 	if err != nil {
-		return
+		return nil, err
 	}
-	certPem, err := ioutil.ReadFile(caPath)
+
+	schema := "https://"
+	insecure, _ := strconv.ParseBool(vurl.Query().Get("insecure"))
+	if insecure {
+		schema = "http://"
+	}
+	cfg.Address = schema + vurl.Host
+
+	client, err := api.NewClient(cfg)
 	if err != nil {
-		return
+		return nil, err
 	}
-	pool.AppendCertsFromPEM(certPem)
-	config.RootCAs = pool
-	return
+
+	if token == "" {
+		token = InferVaultToken()
+	}
+	client.SetToken(token)
+
+	return hcvault.NewClientWithAEADOptions(keyId, client.Logical(), hcvault.WithLegacyContextParamater())
 }

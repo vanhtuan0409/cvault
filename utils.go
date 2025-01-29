@@ -7,12 +7,8 @@ import (
 )
 
 const (
-	FileType = ".cvault"
-
-	TinkAwsKms  = "aws-kms://"
-	TinkGcpKms  = "gcp-kms://"
+	FileType    = ".cvault"
 	TinkHcVault = "hcvault://"
-	AesGcm      = "aesgcm://"
 )
 
 func ToEncryptedName(name string) string {

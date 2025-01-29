@@ -5,8 +5,8 @@ import (
 	"crypto/rand"
 	"io"
 
-	"github.com/google/tink/go/aead"
-	"github.com/google/tink/go/keyset"
+	"github.com/tink-crypto/tink-go/v2/aead"
+	"github.com/tink-crypto/tink-go/v2/keyset"
 	"github.com/vmihailenco/msgpack/v5"
 )
 
