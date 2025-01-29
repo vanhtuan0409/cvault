@@ -39,6 +39,7 @@ func AddDecryptCommand(root *cobra.Command) {
 			fmt.Printf("Output dir: %s\n", outputDir)
 			fmt.Println("--------------------------------")
 
+			args = expandStorageWildcard(cmd.Context(), s, args)
 			for _, fileKey := range args {
 				fileName := cvault.ToDecryptedName(fileKey)
 				decryptedFile := filepath.Join(outputDir, fileName)

@@ -26,6 +26,7 @@ func AddRemoveCommand(root *cobra.Command) {
 				return err
 			}
 
+			args = expandStorageWildcard(cmd.Context(), s, args)
 			for _, fName := range args {
 				if err := s.Remove(ctx, fName); err != nil {
 					fmt.Printf("[Warning] Unable to remove file %s. ERR: %v\n", fName, err)

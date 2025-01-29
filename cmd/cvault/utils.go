@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -8,6 +9,19 @@ import (
 	"github.com/vanhtuan0409/cvault"
 	"github.com/vanhtuan0409/cvault/storage"
 )
+
+func expandStorageWildcard(ctx context.Context, s storage.Storage, args []string) []string {
+	if len(args) == 1 && args[0] == "*" {
+		items, err := s.List(ctx)
+		if err != nil {
+			return []string{}
+		}
+		return cvault.SliceMap(items, func(i *storage.VaultItem) string {
+			return i.Key
+		})
+	}
+	return args
+}
 
 func completeStoreFile() func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	return func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
